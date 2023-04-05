@@ -7,6 +7,27 @@
 #include <string>
 #include <sstream>
 
+#define ASSERT(x) if(!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+static void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+
+static bool GLLogCall(const char* func, const char* file, int line)
+{
+	while (auto error = glGetError()) {
+		std::cout << file << ":" << func << ":" << line << " GL error " << error << std::endl;
+		return false;
+	}
+
+	return true;
+}
+
 struct ShaderCode
 {
 	std::string vs;
@@ -136,9 +157,14 @@ int main()
 	float vertices[] = {
 		-0.5f, -0.5f,
 		 0.5f, -0.5f,
-		 0.0f,  0.5f
+		 0.5f,  0.5f,
+		 -0.5f,  0.5f,
 	};
 
+	unsigned int indices[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
 	unsigned int VAO; glGenVertexArrays(1, &VAO); glBindVertexArray(VAO);
 
 	GLuint buffer;
@@ -149,17 +175,36 @@ int main()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
+	GLuint index_buffer;
+	glGenBuffers(1, &index_buffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	auto shaderCode = ParseShader("resources/shader/basic.shader");
 	auto shader = CreateShader(shaderCode.vs, shaderCode.fs);
 	glUseProgram(shader);
 
+	int location = glGetUniformLocation(shader, "u_color");
+	ASSERT(location != -1);
+	glUniform4f(location, 0.7f, 0.5f, 0.7f, 1.0f);
+
+	float r = 0.0f;
+	float increment = 0.05f;
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		processInput(window);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUniform4f(location, r, 0.3f, 0.4f, 1.0f);
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 		
+		glfwSwapInterval(0.5);
+		if (r > 1.0f) {
+			r = 0.0f;
+		}
+		else {
+			r += increment;
+		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
