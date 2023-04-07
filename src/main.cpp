@@ -1,7 +1,9 @@
-#include <iostream>
+#include "../inc/Shader.hpp"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <iostream>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -26,54 +28,6 @@ static bool GLLogCall(const char* func, const char* file, int line)
 	}
 
 	return true;
-}
-
-struct ShaderCode
-{
-	std::string vs;
-	std::string fs;
-};
-
-static ShaderCode ParseShader(const std::string& shaderFile)
-{
-	std::ifstream stream(shaderFile);
-	if (!stream.is_open()) {
-		std::cout << "Shader is not available" << std::endl;
-		throw std::runtime_error("Shader is not available");
-	}
-
-	enum class ShaderType
-	{
-		None = -1,
-		Vertex,
-		Fragment
-	};
-
-	std::string line;
-	std::stringstream vs, fs;
-	auto mode = ShaderType::None;
-	while (getline(stream, line)) {
-		if (line.find("#shader") != std::string::npos) {
-			if (line.find("vertex") != std::string::npos) {
-				mode = ShaderType::Vertex;
-			}
-			else if (line.find("fragment") != std::string::npos) {
-				mode = ShaderType::Fragment;
-			}
-		}
-		else {
-			if (mode == ShaderType::Vertex) {
-				vs << line << std::endl;
-			}
-			else if (mode == ShaderType::Fragment) {
-				fs << line << std::endl;
-			}
-		}
-	}
-
-	std::cout << "Vertex Shader code: " << std::endl << vs.str() << std::endl;
-	std::cout << "Fragment Shader code: " << std::endl << fs.str() << std::endl;
-	return { vs.str(), fs.str() };
 }
 
 void processInput(GLFWwindow* window)
@@ -119,13 +73,13 @@ static int CreateShader(const std::string& vertexShader, const std::string& frag
 	auto vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
 	auto fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
-	glAttachShader(program, vs);
-	glAttachShader(program, fs);
-	glLinkProgram(program);
-	glValidateProgram(program);
+	GLCall(glAttachShader(program, vs));
+	GLCall(glAttachShader(program, fs));
+	GLCall(glLinkProgram(program));
+	GLCall(glValidateProgram(program));
 
-	glDeleteShader(vs);
-	glDeleteShader(fs);
+	GLCall(glDeleteShader(vs));
+	GLCall(glDeleteShader(fs));
 
 	return program;
 }
@@ -155,10 +109,10 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	float vertices[] = {
-		-0.5f, -0.5f,
-		 0.5f, -0.5f,
-		 0.5f,  0.5f,
-		 -0.5f,  0.5f,
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+		 -0.5f,  0.5f, 0.0f, 0.5f, 0.5f, 0.5f
 	};
 
 	unsigned int indices[] = {
@@ -168,34 +122,36 @@ int main()
 	unsigned int VAO; glGenVertexArrays(1, &VAO); glBindVertexArray(VAO);
 
 	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &buffer));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0));
+
+	GLCall(glEnableVertexAttribArray(1));
+	GLCall(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 3)));
 
 	GLuint index_buffer;
-	glGenBuffers(1, &index_buffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &index_buffer);)
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);)
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);)
 
-	auto shaderCode = ParseShader("resources/shader/basic.shader");
-	auto shader = CreateShader(shaderCode.vs, shaderCode.fs);
-	glUseProgram(shader);
-
-	int location = glGetUniformLocation(shader, "u_color");
-	ASSERT(location != -1);
-	glUniform4f(location, 0.7f, 0.5f, 0.7f, 1.0f);
+	Shader shader("resources/shader/vertex.shader", "resources/shader/fragment.shader");
 
 	float r = 0.0f;
 	float increment = 0.05f;
 	while (!glfwWindowShouldClose(window)) {
-		glClear(GL_COLOR_BUFFER_BIT);
+		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 		processInput(window);
 
-		glUniform4f(location, r, 0.3f, 0.4f, 1.0f);
+		shader.use();
+		shader.setFloat("someUniform", 0.25f);
+
+		glBindVertexArray(VAO);
+		//GLCall(glUniform4f(location, r, 0.3f, 0.4f, 1.0f));
+		GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 		
 		glfwSwapInterval(0.5);
@@ -208,8 +164,6 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	glDeleteProgram(shader);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

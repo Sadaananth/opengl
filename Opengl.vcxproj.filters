@@ -11,9 +11,15 @@
     <Filter Include="resources\shader">
       <UniqueIdentifier>{6a6eafec-d625-42ef-9119-9b7c9f4d9e27}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{ae5e61da-03a9-4bda-a6cb-009ce1b53274}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shader\Basic.shader">
+    <None Include="resources\shader\vertex.shader">
+      <Filter>resources\shader</Filter>
+    </None>
+    <None Include="resources\shader\fragment.shader">
       <Filter>resources\shader</Filter>
     </None>
   </ItemGroup>
@@ -24,5 +30,13 @@
     <ClCompile Include="src\glad.c">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\Shader.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\Shader.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

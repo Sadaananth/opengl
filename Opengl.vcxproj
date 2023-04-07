@@ -75,7 +75,7 @@
     <LibraryPath>C:\Projects\opengl\libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Projects\opengl\libraries\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Projects\opengl\libraries\include;$(IncludePath);../inc/</IncludePath>
     <LibraryPath>C:\Projects\opengl\libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -137,11 +137,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="resources\shader\Basic.shader" />
+    <None Include="resources\shader\fragment.shader" />
+    <None Include="resources\shader\vertex.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\Shader.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
