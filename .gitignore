@@ -38,3 +38,5 @@ libraries
 x64
 
 glad.c
+
+stb_image*

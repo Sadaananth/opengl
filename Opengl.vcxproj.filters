@@ -33,10 +33,16 @@
     <ClCompile Include="src\Shader.cpp">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\stb_image.c">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Shader.hpp">
       <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stb_image.h">
+      <Filter>sources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
