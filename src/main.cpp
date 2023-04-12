@@ -34,18 +34,76 @@ static bool GLLogCall(const char* func, const char* file, int line)
 	return true;
 }
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f; // Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+float lastX = 400, lastY = 400;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float Zoom = 45.0f;
+
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		std::cout << "Escape pressed" << std::endl;
 		glfwSetWindowShouldClose(window, true);
 	}
+	const float cameraSpeed = 0.25f * deltaTime; // adjust accordingly
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		cameraPos += cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		cameraPos -= cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) *
+		cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) *
+		cameraSpeed;
+
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	std::cout << "Width " << width << " Height " << height << std::endl;
 	//glViewport(0, 0, width, height);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	Zoom -= (float)yoffset;
+	if (Zoom < 1.0f)
+		Zoom = 1.0f;
+	if (Zoom > 45.0f)
+		Zoom = 45.0f;
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	static bool firstMouse = true;
+	if (firstMouse) // initially set to true
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed: y ranges bottom to top
+	lastX = xpos;
+	lastY = ypos;
+	const float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
 }
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
@@ -218,20 +276,36 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
+	glm::mat4 view;
+
 	float r = 0.0f;
 	float increment = 0.05f;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	glm::vec3 direction;
+
 	while (!glfwWindowShouldClose(window)) {
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		processInput(window);
+
+		direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		direction.y = sin(glm::radians(pitch));
+		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
 		// create transformations
 		//glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-		glm::mat4 view = glm::mat4(1.0f);
+		//glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
 		//model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		projection = glm::perspective(glm::radians(45.0f), (float)800 / (float)800, 0.1f, 100.0f);
+		//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		projection = glm::perspective(glm::radians(Zoom), (float)800 / (float)800, 0.1f, 100.0f);
 		// retrieve the matrix uniform locations
 		//unsigned int modelLoc = glGetUniformLocation(shader.ID, "model");
 		unsigned int viewLoc = glGetUniformLocation(shader.ID, "view");
@@ -243,6 +317,10 @@ int main()
 
 		shader.use();
 		shader.setFloat("someUniform", 0.25f);
+
+		cameraFront = glm::normalize(direction);
+
+		view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
 
 		glBindVertexArray(VAO);
 		//GLCall(glUniform4f(location, r, 0.3f, 0.4f, 1.0f));
