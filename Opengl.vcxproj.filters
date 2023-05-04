@@ -36,6 +36,9 @@
     <ClCompile Include="src\stb_image.c">
       <Filter>sources</Filter>
     </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="inc\Shader.hpp">
@@ -43,6 +46,12 @@
     </ClInclude>
     <ClInclude Include="src\stb_image.h">
       <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Model.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\Camera.hpp">
+      <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
