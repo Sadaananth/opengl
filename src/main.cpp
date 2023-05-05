@@ -41,13 +41,9 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGl", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -79,13 +75,11 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shader/vertex.shader", "resources/shader/fragment.shader");
+    Shader shader("resources/shader/vertex.shader", "resources/shader/fragment.shader");
 
     // load models
     // -----------
-    std::string model_path{ "C:\\Projects\\opengl\\resources\\blend\\kaka.obj" };
-    Model ourModel(model_path.c_str());
-
+    Model ourModel("resources/blend/backpack/backpack.obj");
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -106,24 +100,24 @@ int main()
 
         // render
         // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.05f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms
-        ourShader.use();
+        shader.use();
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+        shader.setMat4("view", view);
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        shader.setMat4("model", model);
+        ourModel.Draw(shader);
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
