@@ -79,7 +79,7 @@ int main()
 
     // load models
     // -----------
-    Model ourModel("resources/blend/backpack/backpack.obj");
+    Model ourModel("resources/blend/human_model1.obj");
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
